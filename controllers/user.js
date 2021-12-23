@@ -150,7 +150,7 @@ exports.findAllUser = async (req, res) => {
     return res.status(400).send({ errors: errors.array() });
   }
   try{
-    const page = req.params.page ? req.params.page-1 : 0;
+    const page = req.query.page ? req.query.page-1 : 0;
     const redis = await Redis.findAll(page);
     if(redis){
       res.status(redis.status).json(redis.result);
