@@ -1,15 +1,7 @@
-const models = require("../models");
-const Sequelize = models.Sequelize;
-const sequelize = models.sequelize;
-const Op = Sequelize.Op;
 const logger = require("../loaders/logger");
-const jwt = require('jsonwebtoken');
-const config = require('../config');
-const { query, body, validationResult, param } = require("express-validator");
+const { body, validationResult } = require("express-validator");
 // SERVICE
 const Authenticate = require("../services/Authenticate");
-const { mysqlDate } = require("../utils");
-const User = require("../services/User");
 
 const customValidationResult = validationResult.withDefaults({
 	formatter: (error) => {

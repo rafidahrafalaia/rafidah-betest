@@ -18,13 +18,13 @@ const userSchema = new Schema(
     },
     accountNumber: {
       type: String,
-      required: true, 
-      index: true
+      required: true,
+      index: { unique: true }
     },
     identityNumber: {
       type: String,
-      required: true, 
-      index: true
+      required: true,
+      index: { unique: true }
     },
   },
   { collection: "user" }

@@ -1,7 +1,6 @@
-const config = require("../config");
 const { uuid } = require('uuidv4');
 const logger = require("../loaders/logger");
-const { query, body, validationResult, param } = require("express-validator");
+const { query, body, validationResult } = require("express-validator");
 const User = require("../services/User");
 const Redis = require("../services/Redis");
 
@@ -38,6 +37,7 @@ const customValidationResult = validationResult.withDefaults({
     };
     // Create a User
     const created = await User.createOne(values);
+    //set cache redis
     if(created.status==200){
       await Redis.setBy({
         Id: values.Id, 
@@ -69,6 +69,7 @@ exports.putUser = async (req, res) => {
   }
   try{
     const updated = await User.updateOne(req.body);
+    //set cache redis
     if(updated.status==200){
       await Redis.setBy({
         Id: req.body.Id, 
@@ -98,6 +99,7 @@ exports.deleteUser = async (req, res) => {
   try{
     const find = await User.findBy({Id});
     const deleted = await User.deleteOne(Id);
+    //del cache redis of the data
     if(deleted.status==200){
       await Redis.delBy(Id, find.result[0].accountNumber, find.result[0].identityNumber);
       await Redis.delAll();
@@ -118,16 +120,16 @@ exports.findUser = async (req, res) => {
        message: "Need only one of the accountNumber & IdentityNumber!"
      });
     }
-    // Find a User 
+    //Retrive cache redis if any
     const redis = await Redis.findBy({accountNumber, identityNumber});
     if(redis){
       res.status(redis.status).json(redis.result);
-    }
+    }else{
+    //Retrive in mongodb when cache nnot exist
     const findOne = await User.findBy({accountNumber, identityNumber});
     if(findOne.status==200){
       await Redis.setBy({accountNumber, identityNumber, data: findOne.result});
     }
-    if(!redis){
       res.status(findOne.status).json(findOne.result);
     }
   }catch (err) {
@@ -136,7 +138,7 @@ exports.findUser = async (req, res) => {
   }
  };
 
-// // Retrieve all Package from the database.
+// // Retrieve all User from the database.
 exports.findAllUser = async (req, res) => {
   await query("page")
     .optional()
@@ -151,16 +153,17 @@ exports.findAllUser = async (req, res) => {
   }
   try{
     const page = req.query.page ? req.query.page-1 : 0;
+    //Retrive cache redis if any
     const redis = await Redis.findAll(page);
     if(redis){
       res.status(redis.status).json(redis.result);
-    }
-    const fidAll = await User.findAll(page);
-    if(fidAll.status==200){
-      await Redis.setAll(page, fidAll.result);
-    }
-    if(!redis){
-      res.status(fidAll.status).json(fidAll.result);
+    }else{
+    //Retrive in mongodb when cache nnot exist
+      const fidAll = await User.findAll(page);
+      if(fidAll.status==200){
+        await Redis.setAll(page, fidAll.result);
+      }
+        res.status(fidAll.status).json(fidAll.result);
     }
     }catch (err) {
       logger.error("🔥 error: %o", err);
