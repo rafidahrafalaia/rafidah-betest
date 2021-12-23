@@ -1,3 +1,7 @@
+const models = require("../models");
+const Sequelize = models.Sequelize;
+const sequelize = models.sequelize;
+const Op = Sequelize.Op;
 const logger = require("../loaders/logger");
 const { body, validationResult } = require("express-validator");
 // SERVICE
